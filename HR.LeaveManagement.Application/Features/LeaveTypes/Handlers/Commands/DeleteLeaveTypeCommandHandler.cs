@@ -1,6 +1,6 @@
 ﻿using HR.LeaveManagement.Application.Exceptions;
 using HR.LeaveManagement.Application.Features.LeaveTypes.Requests.Commands;
-using HR.LeaveManagement.Application.Contracts.Persistance;
+using HR.LeaveManagement.Application.Contracts.Persistence;
 using HR.LeaveManagement.Domain;
 using MediatR;
 using System;
@@ -13,22 +13,24 @@ namespace HR.LeaveManagement.Application.Features.LeaveTypes.Handlers.Commands
 {
     public class DeleteLeaveTypeCommandHandler : IRequestHandler<DeleteLeaveTypeCommand, Unit>
     {
-        private readonly ILeaveTypeRepository leaveTypeRepository;
+        private readonly IUnitOfWork unitOfWork;
 
-        public DeleteLeaveTypeCommandHandler(ILeaveTypeRepository leaveTypeRepository)
+        public DeleteLeaveTypeCommandHandler(IUnitOfWork unitOfWork)
         {
-            this.leaveTypeRepository = leaveTypeRepository;
+            this.unitOfWork = unitOfWork;
         }
 
         public async Task<Unit> Handle(DeleteLeaveTypeCommand request, CancellationToken cancellationToken)
         {
             //TODO: return proper type
-            var leaveType = await leaveTypeRepository.Get(request.Id);
+            var leaveType = await unitOfWork.LeaveTypeRepository.Get(request.Id);
 
             if (leaveType == null)
                 throw new NotFoundException(nameof(LeaveType), request.Id);
 
-            await leaveTypeRepository.Delete(leaveType);
+            await unitOfWork.LeaveTypeRepository.Delete(leaveType);
+            await unitOfWork.Save();
+
             return Unit.Value;
         }
     }

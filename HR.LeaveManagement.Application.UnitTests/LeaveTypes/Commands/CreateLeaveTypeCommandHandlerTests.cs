@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using HR.LeaveManagement.Application.Contracts.Persistance;
+using HR.LeaveManagement.Application.Contracts.Persistence;
 using HR.LeaveManagement.Application.DTOs.LeaveType;
 using HR.LeaveManagement.Application.Exceptions;
 using HR.LeaveManagement.Application.Features.LeaveTypes.Handlers.Commands;
@@ -21,14 +21,15 @@ namespace HR.LeaveManagement.Application.UnitTests.LeaveTypes.Commands
 {
     public class CreateLeaveTypeCommandHandlerTests
     {
-        private readonly Mock<ILeaveTypeRepository> mockRepo;
+        private readonly Mock<IUnitOfWork> mockUow;
         private readonly IMapper mapper;
         private readonly CreateLeaveTypeDto leaveTypeDto;
         private readonly CreateLeaveTypeCommandHandler handler;
 
         public CreateLeaveTypeCommandHandlerTests()
         {
-            mockRepo = MockLeaveTypeRepository.GetLeaveTypeRepository();
+            //mockRepo = MockLeaveTypeRepository.GetLeaveTypeRepository();
+            mockUow = MockUnifOfWork.GetUnitOfWork();
 
             var mapperConfig = new MapperConfiguration(c =>
             {
@@ -36,15 +37,13 @@ namespace HR.LeaveManagement.Application.UnitTests.LeaveTypes.Commands
             });
 
             mapper = mapperConfig.CreateMapper();
+            handler = new CreateLeaveTypeCommandHandler(mockUow.Object, mapper);
 
             leaveTypeDto = new CreateLeaveTypeDto
             {
                 DefaultDays = 15,
                 Name = "Test DTO"
             };
-
-            handler = new CreateLeaveTypeCommandHandler(mockRepo.Object, mapper);
-
         }
 
         [Fact]
@@ -55,7 +54,7 @@ namespace HR.LeaveManagement.Application.UnitTests.LeaveTypes.Commands
                 LeaveTypeDto = leaveTypeDto
             }, CancellationToken.None);
 
-            var leaveTypes = await mockRepo.Object.GetAll();
+            var leaveTypes = await mockUow.Object.LeaveTypeRepository.GetAll();
 
             result.ShouldBeOfType<BaseCommandResponse>();
             leaveTypes.Count.ShouldBe(4);
@@ -69,7 +68,7 @@ namespace HR.LeaveManagement.Application.UnitTests.LeaveTypes.Commands
             var result = await handler
                 .Handle(new CreateLeaveTypeCommand() { LeaveTypeDto = leaveTypeDto }, CancellationToken.None);
 
-            var leaveTypes = await mockRepo.Object.GetAll();
+            var leaveTypes = await mockUow.Object.LeaveTypeRepository.GetAll();
             leaveTypes.Count.ShouldBe(3);
 
             result.ShouldBeOfType<BaseCommandResponse>();

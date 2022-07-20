@@ -1,4 +1,4 @@
-﻿using HR.LeaveManagement.Application.Contracts.Persistance;
+﻿using HR.LeaveManagement.Application.Contracts.Persistence;
 using HR.LeaveManagement.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -21,7 +21,6 @@ namespace HR.LeaveManagement.Persistence.Repositories
         public async Task AddAllocations(List<LeaveAllocation> allocations)
         {
             await dbContext.AddRangeAsync(allocations);
-            await dbContext.SaveChangesAsync();
         }
 
         public async Task<bool> AllocationExists(string userId, int leaveTypeId, int period)

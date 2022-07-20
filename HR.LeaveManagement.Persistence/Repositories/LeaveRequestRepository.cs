@@ -1,4 +1,4 @@
-﻿using HR.LeaveManagement.Application.Contracts.Persistance;
+﻿using HR.LeaveManagement.Application.Contracts.Persistence;
 using HR.LeaveManagement.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -22,7 +22,6 @@ namespace HR.LeaveManagement.Persistence.Repositories
         {
             leaveRequest.Approved = ApprovalStatus;
             dbContext.Entry(leaveRequest).State = EntityState.Modified;
-            await dbContext.SaveChangesAsync();
         }
 
         public async Task<List<LeaveRequest>> GetLeaveRequestsWithDetails()

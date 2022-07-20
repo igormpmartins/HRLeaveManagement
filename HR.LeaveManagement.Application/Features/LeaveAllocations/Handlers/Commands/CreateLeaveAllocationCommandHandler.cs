@@ -2,7 +2,7 @@
 using HR.LeaveManagement.Application.DTOs.LeaveAllocation.Validators;
 using HR.LeaveManagement.Application.Exceptions;
 using HR.LeaveManagement.Application.Features.LeaveAllocations.Requests.Commands;
-using HR.LeaveManagement.Application.Contracts.Persistance;
+using HR.LeaveManagement.Application.Contracts.Persistence;
 using HR.LeaveManagement.Domain;
 using MediatR;
 using System;
@@ -18,19 +18,16 @@ namespace HR.LeaveManagement.Application.Features.LeaveAllocations.Handlers.Comm
 {
     public class CreateLeaveAllocationCommandHandler : IRequestHandler<CreateLeaveAllocationCommand, BaseCommandResponse>
     {
-        private readonly ILeaveAllocationRepository leaveAllocationRepository;
-        private readonly ILeaveTypeRepository leaveTypeRepository;
+        private readonly IUnitOfWork unitOfWork;
         private readonly IUserService userService;
         private readonly IMapper mapper;
 
         public CreateLeaveAllocationCommandHandler(
-            ILeaveAllocationRepository leaveAllocationRepository, 
-            ILeaveTypeRepository leaveTypeRepository,
+            IUnitOfWork unitOfWork,
             IUserService userService,
             IMapper mapper)
         {
-            this.leaveAllocationRepository = leaveAllocationRepository;
-            this.leaveTypeRepository = leaveTypeRepository;
+            this.unitOfWork = unitOfWork;
             this.userService = userService;
             this.mapper = mapper;
         }
@@ -38,7 +35,7 @@ namespace HR.LeaveManagement.Application.Features.LeaveAllocations.Handlers.Comm
         public async Task<BaseCommandResponse> Handle(CreateLeaveAllocationCommand request, CancellationToken cancellationToken)
         {
             var response = new BaseCommandResponse();
-            var validator = new CreateLeaveAllocationDtoValidator(leaveTypeRepository);
+            var validator = new CreateLeaveAllocationDtoValidator(unitOfWork.LeaveTypeRepository);
 
             var result = await validator.ValidateAsync(request.LeaveAllocationDto);
             if (!result.IsValid)
@@ -49,7 +46,7 @@ namespace HR.LeaveManagement.Application.Features.LeaveAllocations.Handlers.Comm
             } 
             else
             {
-                var leaveType = await leaveTypeRepository.Get(request.LeaveAllocationDto.LeaveTypeId);
+                var leaveType = await unitOfWork.LeaveTypeRepository.Get(request.LeaveAllocationDto.LeaveTypeId);
                 var employees = await userService.GetEmployees();
                 var period = DateTime.Now.Year;
 
@@ -57,7 +54,7 @@ namespace HR.LeaveManagement.Application.Features.LeaveAllocations.Handlers.Comm
 
                 foreach (var emp in employees)
                 {
-                    if (await leaveAllocationRepository.AllocationExists(emp.Id, leaveType.Id, period))
+                    if (await unitOfWork.LeaveAllocationRepository.AllocationExists(emp.Id, leaveType.Id, period))
                         continue;
 
                     allocations.Add(new LeaveAllocation
@@ -69,7 +66,8 @@ namespace HR.LeaveManagement.Application.Features.LeaveAllocations.Handlers.Comm
                     });
                 }
 
-                await leaveAllocationRepository.AddAllocations(allocations);
+                await unitOfWork.LeaveAllocationRepository.AddAllocations(allocations);
+                await unitOfWork.Save();
 
                 response.Success = true;
                 response.Message = "Creation Successful";

@@ -2,7 +2,7 @@
 using HR.LeaveManagement.Application.DTOs.LeaveType.Validators;
 using HR.LeaveManagement.Application.Exceptions;
 using HR.LeaveManagement.Application.Features.LeaveTypes.Requests.Commands;
-using HR.LeaveManagement.Application.Contracts.Persistance;
+using HR.LeaveManagement.Application.Contracts.Persistence;
 using HR.LeaveManagement.Domain;
 using MediatR;
 using System;
@@ -17,12 +17,14 @@ namespace HR.LeaveManagement.Application.Features.LeaveTypes.Handlers.Commands
 {
     public class CreateLeaveTypeCommandHandler : IRequestHandler<CreateLeaveTypeCommand, BaseCommandResponse>
     {
-        private readonly ILeaveTypeRepository leaveTypeRepository;
+        private readonly IUnitOfWork unitOfWork;
         private readonly IMapper mapper;
 
-        public CreateLeaveTypeCommandHandler(ILeaveTypeRepository leaveTypeRepository, IMapper mapper)
+        public CreateLeaveTypeCommandHandler(
+            IUnitOfWork unitOfWork,
+            IMapper mapper)
         {
-            this.leaveTypeRepository = leaveTypeRepository;
+            this.unitOfWork = unitOfWork;
             this.mapper = mapper;
         }
 
@@ -41,7 +43,8 @@ namespace HR.LeaveManagement.Application.Features.LeaveTypes.Handlers.Commands
             }
 
             var leaveType = mapper.Map<LeaveType>(request.LeaveTypeDto);
-            leaveType = await leaveTypeRepository.Add(leaveType);
+            leaveType = await unitOfWork.LeaveTypeRepository.Add(leaveType);
+            await unitOfWork.Save();
 
             response.Success = true;
             response.Message = "Creation Successful";
