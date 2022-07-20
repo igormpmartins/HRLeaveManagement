@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace HR.LeaveManagement.Application.Contracts.Infrastructure
+namespace HR.LeaveManagement.Application.Models
 {
     public class EmailSettings
     {

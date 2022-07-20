@@ -10,10 +10,12 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using HR.LeaveManagement.Application.Responses;
+using System.Linq;
 
 namespace HR.LeaveManagement.Application.Features.LeaveTypes.Handlers.Commands
 {
-    public class CreateLeaveTypeCommandHandler : IRequestHandler<CreateLeaveTypeCommand, int>
+    public class CreateLeaveTypeCommandHandler : IRequestHandler<CreateLeaveTypeCommand, BaseCommandResponse>
     {
         private readonly ILeaveTypeRepository leaveTypeRepository;
         private readonly IMapper mapper;
@@ -24,17 +26,28 @@ namespace HR.LeaveManagement.Application.Features.LeaveTypes.Handlers.Commands
             this.mapper = mapper;
         }
 
-        public async Task<int> Handle(CreateLeaveTypeCommand request, CancellationToken cancellationToken)
+        public async Task<BaseCommandResponse> Handle(CreateLeaveTypeCommand request, CancellationToken cancellationToken)
         {
+            var response = new BaseCommandResponse();
             var validator = new CreateLeaveTypeDtoValidator();
-
             var result = await validator.ValidateAsync(request.LeaveTypeDto);
+
             if (!result.IsValid)
-                throw new ValidationException(result);
+            {
+                response.Success = false;
+                response.Message = "Creation Failed";
+                response.Errors = result.Errors.Select(q => q.ErrorMessage).ToList();
+                return response;
+            }
 
             var leaveType = mapper.Map<LeaveType>(request.LeaveTypeDto);
             leaveType = await leaveTypeRepository.Add(leaveType);
-            return leaveType.Id;
+
+            response.Success = true;
+            response.Message = "Creation Successful";
+            response.Id = leaveType.Id;
+
+            return response;
         }
     }
 }

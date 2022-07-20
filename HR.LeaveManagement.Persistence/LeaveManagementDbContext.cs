@@ -27,9 +27,13 @@ namespace HR.LeaveManagement.Persistence
             foreach (var entry in ChangeTracker.Entries<BaseDomainEntity>())
             {
                 entry.Entity.LastModifiedDate = DateTime.Now;
+                entry.Entity.LastModifiedBy = string.Empty;
 
                 if (entry.State == EntityState.Added)
+                {
                     entry.Entity.DateCreated = DateTime.Now;
+                    entry.Entity.CreatedBy = String.Empty;
+                }
             }
 
             return base.SaveChangesAsync(cancellationToken);

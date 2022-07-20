@@ -25,6 +25,7 @@ namespace HR.LeaveManagement.Application.Features.LeaveTypes.Handlers.Commands
 
         public async Task<Unit> Handle(UpdateLeaveTypeCommand request, CancellationToken cancellationToken)
         {
+            //TODO: return proper type
             var validator = new UpdateLeaveTypeDtoValidator();
 
             var result = await validator.ValidateAsync(request.LeaveTypeDto);

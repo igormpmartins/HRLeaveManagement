@@ -22,6 +22,7 @@ namespace HR.LeaveManagement.Application.Features.LeaveTypes.Handlers.Commands
 
         public async Task<Unit> Handle(DeleteLeaveTypeCommand request, CancellationToken cancellationToken)
         {
+            //TODO: return proper type
             var leaveType = await leaveTypeRepository.Get(request.Id);
 
             if (leaveType == null)
